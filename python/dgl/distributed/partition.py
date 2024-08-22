@@ -117,48 +117,33 @@ def _save_graphs(filename, g_list, formats=None, sort_etypes=False):
 
 
 def _get_inner_node_mask(graph, ntype_id, use_graphbolt=False):
-    if use_graphbolt:
-        if NTYPE in graph.node_attributes:
-            dtype = F.dtype(graph.node_attributes["inner_node"])
-            return (
-                graph.node_attributes["inner_node"]
-                * F.astype(graph.node_attributes[NTYPE] == ntype_id, dtype)
-                == 1
-            )
-        else:
-            return graph.node_attributes["inner_node"] == 1
-    else:
-        if NTYPE in graph.ndata:
-            dtype = F.dtype(graph.ndata["inner_node"])
-            return (
-                graph.ndata["inner_node"]
-                * F.astype(graph.ndata[NTYPE] == ntype_id, dtype)
-                == 1
-            )
-        else:
-            return graph.ndata["inner_node"] == 1
-
-
-def _get_inner_edge_mask(graph, etype_id, use_graphbolt=False):
-    if use_graphbolt:
-        if graph.type_per_edge is not None:
-            dtype = F.dtype(graph.edge_attributes["inner_edge"])
-            return (
-                graph.edge_attributes["inner_edge"]
-                * F.astype(graph.type_per_edge == etype_id, dtype)
-                == 1
-            )
-        else:
-            return graph.edge_attributes["inner_edge"] == 1
-    if ETYPE in graph.edata:
-        dtype = F.dtype(graph.edata["inner_edge"])
+    ndata = graph.node_attributes if use_graphbolt else graph.ndata
+    if NTYPE in ndata:
+        dtype = F.dtype(ndata["inner_node"])
         return (
-            graph.edata["inner_edge"]
-            * F.astype(graph.edata[ETYPE] == etype_id, dtype)
+            ndata["inner_node"]
+            * F.astype(ndata[NTYPE] == ntype_id, dtype)
             == 1
         )
     else:
-        return graph.edata["inner_edge"] == 1
+        return ndata["inner_node"] == 1
+
+
+def _get_inner_edge_mask(graph, etype_id, use_graphbolt=False):
+    edata = graph.edge_attributes if use_graphbolt else graph.edata
+    etype=graph.type_per_edge if use_graphbolt \
+        else (graph.edata[ETYPE]if ETYPE in graph.edata 
+              else None)
+    if etype is not None:
+        dtype = F.dtype(edata["inner_edge"])
+        return (
+            edata["inner_edge"]
+            * F.astype(etype == etype_id, dtype)
+            == 1
+        )
+    else:
+        return edata["inner_edge"] == 1
+    
 
 
 def _get_part_ranges(id_ranges):
