@@ -531,7 +531,6 @@ def create_dgl_object(
         adj_matrix = dglsp.from_coo(
             part_local_src_id, part_local_dst_id, shape=(size, size)
         )
-        print(adj_matrix)
         indptr, indices, _ = adj_matrix.csc()
         del adj_matrix
 
