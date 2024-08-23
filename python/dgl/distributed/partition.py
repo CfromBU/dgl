@@ -1448,6 +1448,7 @@ def partition_graph(
                 
             part = _process_partitions([part], graph_formats, sort_etypes)[0]
             # save FusedCSCSamplingGraph
+            kwargs["graph_formats"] = graph_formats
             _partition_to_graphbolt(part_config, part_metadata,parts,**kwargs)
         else:
             part_graph_file = os.path.join(part_dir, "graph.dgl")
