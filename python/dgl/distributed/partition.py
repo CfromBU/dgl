@@ -118,13 +118,11 @@ def _save_graphs(filename, g_list, formats=None, sort_etypes=False):
 
 def _get_inner_node_mask(graph, ntype_id, use_graphbolt=False):
     ndata = graph.node_attributes if use_graphbolt else graph.ndata
-    assert 'inner_node' in ndata, '"inner_node" is not nodes\' data'
+    assert "inner_node" in ndata, '"inner_node" is not nodes\' data'
     if NTYPE in ndata:
         dtype = F.dtype(ndata["inner_node"])
         return (
-            ndata["inner_node"]
-            * F.astype(ndata[NTYPE] == ntype_id, dtype)
-            == 1
+            ndata["inner_node"] * F.astype(ndata[NTYPE] == ntype_id, dtype) == 1
         )
     else:
         return ndata["inner_node"] == 1
@@ -132,19 +130,16 @@ def _get_inner_node_mask(graph, ntype_id, use_graphbolt=False):
 
 def _get_inner_edge_mask(graph, etype_id, use_graphbolt=False):
     edata = graph.edge_attributes if use_graphbolt else graph.edata
-    etype=graph.type_per_edge if use_graphbolt \
-        else (graph.edata[ETYPE]if ETYPE in graph.edata 
-              else None)
+    etype = (
+        graph.type_per_edge
+        if use_graphbolt
+        else (graph.edata[ETYPE] if ETYPE in graph.edata else None)
+    )
     if etype is not None:
         dtype = F.dtype(edata["inner_edge"])
-        return (
-            edata["inner_edge"]
-            * F.astype(etype == etype_id, dtype)
-            == 1
-        )
+        return edata["inner_edge"] * F.astype(etype == etype_id, dtype) == 1
     else:
         return edata["inner_edge"] == 1
-    
 
 
 def _get_part_ranges(id_ranges):
