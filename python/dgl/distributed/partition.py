@@ -1429,9 +1429,9 @@ def partition_graph(
 
             def _partition_to_graphbolt(
                 part_config,
-                part_meta,
                 parts,
                 part_i,
+                part_metadata,
                 *,
                 store_eids=True,
                 store_inner_node=False,
@@ -1448,7 +1448,7 @@ def partition_graph(
                     store_inner_node=store_inner_node,
                     graph_formats=graph_formats,
                 )
-                part_meta[f"part-{part_i}"][
+                part_metadata[f"part-{part_i}"][
                     "part_graph_graphbolt"
                 ] = rel_path_result
 
@@ -1456,7 +1456,13 @@ def partition_graph(
             # save FusedCSCSamplingGraph
             kwargs["graph_formats"] = graph_formats
             kwargs.pop("n_jobs", None)
-            _partition_to_graphbolt(part_config, part_metadata, parts, **kwargs)
+            _partition_to_graphbolt(
+                part_i=part_id,
+                part_config=part_config,
+                part_metadata=part_metadata,
+                parts=parts,
+                **kwargs,
+            )
         else:
             part_graph_file = os.path.join(part_dir, "graph.dgl")
             part_metadata["part-{}".format(part_id)][

@@ -39,6 +39,10 @@ def _test_pipeline_graphbolt(
     num_chunks_node_data=None,
     num_chunks_edge_data=None,
     use_verify_partitions=False,
+    store_eids=True,
+    store_inner_edge=True,
+    store_inner_node=True,
+    debug_mode=False,
 ):
     if num_parts % world_size != 0:
         # num_parts should be a multiple of world_size
@@ -89,6 +93,12 @@ def _test_pipeline_graphbolt(
         cmd += " --save-orig-eids"
         cmd += " --use-graphbolt"
         cmd += f" --graph-formats {graph_formats}" if graph_formats else ""
+        if store_eids:
+            cmd += " --store-eids"
+        if store_inner_edge:
+            cmd += " --store-inner-edge"
+        if store_inner_node:
+            cmd += " --store-inner-node"
         os.system(cmd)
 
         # check if verify_partitions.py is used for validation.
@@ -190,3 +200,7 @@ def test_pipeline_arbitrary_chunks(
 @pytest.mark.parametrize("data_fmt", ["numpy", "parquet"])
 def test_pipeline_feature_format(data_fmt):
     _test_pipeline_graphbolt(4, 4, 4, data_fmt=data_fmt)
+
+
+if __name__ == '__main__':
+    test_pipeline_basics(4,4,4)

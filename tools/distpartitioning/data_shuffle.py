@@ -472,8 +472,8 @@ def exchange_feature(
         )
 
     # exchange actual data here.
+    logging.debug(f"Rank: {rank} {featdata_key.shape=}")
     if featdata_key is not None:
-        logging.debug(f"Rank: {rank} {featdata_key.shape=}")
         feat_dims_dtype = list(featdata_key.shape)
         assert (
             len(featdata_key.shape) == 2 or len(featdata_key.shape) == 1
@@ -1357,10 +1357,7 @@ def gen_dist_partitions(rank, world_size, params):
             sort_etypes,
             params.use_graphbolt,
         )
-        if params.use_graphbolt:
-            memory_snapshot("DiskWriteGrapgboltObjectsComplete: ", rank)
-        else:
-            memory_snapshot("DiskWriteDGLObjectsComplete: ", rank)
+        memory_snapshot("DiskWriteGraphObjectsComplete: ", rank)
 
         # get the meta-data
         json_metadata = create_metadata_json(
