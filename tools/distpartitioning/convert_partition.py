@@ -167,10 +167,46 @@ def _get_unique_invidx(srcids, dstids, nids, low_mem=True):
 
 
 # Utility functions.
-def is_homogeneous(ntypes, etypes):
+def _is_homogeneous(ntypes, etypes):
     """Checks if the provided ntypes and etypes form a homogeneous graph."""
     return len(ntypes) == 1 and len(etypes) == 1
 
+
+def _graph_orig_ids(
+        return_orig_nids,
+        return_orig_eids,
+        ntypes_map,
+        etypes_map,
+        node_attr,
+        edge_attr,
+        per_type_ids,
+        type_per_edge,
+        global_edge_id
+        ):
+        orig_nids = None
+        orig_eids = None
+        if return_orig_nids:
+            orig_nids = {}
+            for ntype, ntype_id in ntypes_map.items():
+                mask = th.logical_and(
+                    node_attr[dgl.NTYPE] == ntype_id,
+                    node_attr["inner_node"],
+                )
+                orig_nids[ntype] = th.as_tensor(per_type_ids[mask])
+        if return_orig_eids:
+            orig_eids = {}
+            for etype, etype_id in etypes_map.items():
+                mask = th.logical_and(
+                    type_per_edge == etype_id,
+                    edge_attr["inner_edge"],
+                )
+                orig_eids[_etype_tuple_to_str(etype)] = th.as_tensor(
+                    global_edge_id[mask]
+                )
+        return orig_nids, orig_eids
+
+
+    
 
 def create_dgl_object(
     schema,
@@ -458,7 +494,7 @@ def create_dgl_object(
         nid_map[part_local_dst_id],
     )
 
-    # create the graph here now.
+
     # create the graph here now.
     if use_graphbolt:
         edge_attr = {}
@@ -494,27 +530,19 @@ def create_dgl_object(
             dtype=RESERVED_FIELD_DTYPE["inner_node"],
         )
 
-        is_homo = is_homogeneous(ntypes, etypes)
-        orig_nids = None
-        orig_eids = None
-        if return_orig_nids:
-            orig_nids = {}
-            for ntype, ntype_id in ntypes_map.items():
-                mask = th.logical_and(
-                    node_attr[dgl.NTYPE] == ntype_id,
-                    node_attr["inner_node"],
-                )
-                orig_nids[ntype] = th.as_tensor(per_type_ids[mask])
-        if return_orig_eids:
-            orig_eids = {}
-            for etype, etype_id in etypes_map.items():
-                mask = th.logical_and(
-                    type_per_edge == etype_id,
-                    edge_attr["inner_edge"],
-                )
-                orig_eids[_etype_tuple_to_str(etype)] = th.as_tensor(
-                    global_edge_id[mask]
-                )
+        is_homo = _is_homogeneous(ntypes, etypes)
+
+        orig_nids, orig_eids = _graph_orig_ids(
+            return_orig_nids,
+            return_orig_eids,
+            ntypes_map,
+            etypes_map,
+            node_attr,
+            edge_attr,
+            per_type_ids,
+            type_per_edge,
+            global_edge_id
+        )
         edge_type_to_id = (
             None
             if is_homo
@@ -588,26 +616,17 @@ def create_dgl_object(
             dtype=RESERVED_FIELD_DTYPE["inner_node"],
         )
 
-        orig_nids = None
-        orig_eids = None
-        if return_orig_nids:
-            orig_nids = {}
-            for ntype, ntype_id in ntypes_map.items():
-                mask = th.logical_and(
-                    part_graph.ndata[dgl.NTYPE] == ntype_id,
-                    part_graph.ndata["inner_node"],
-                )
-                orig_nids[ntype] = th.as_tensor(per_type_ids[mask])
-        if return_orig_eids:
-            orig_eids = {}
-            for etype, etype_id in etypes_map.items():
-                mask = th.logical_and(
-                    part_graph.edata[dgl.ETYPE] == etype_id,
-                    part_graph.edata["inner_edge"],
-                )
-                orig_eids[_etype_tuple_to_str(etype)] = th.as_tensor(
-                    global_edge_id[mask]
-                )
+        orig_nids, orig_eids = _graph_orig_ids(
+            return_orig_nids,
+            return_orig_eids,
+            ntypes_map,
+            etypes_map,
+            node_attr,
+            edge_attr,
+            per_type_ids,
+            type_per_edge,
+            global_edge_id
+        )
 
     return (
         part_graph,
