@@ -1425,31 +1425,38 @@ def partition_graph(
             "edge_feats": os.path.relpath(edge_feat_file, out_path),
         }
         sort_etypes = len(g.etypes) > 1
-        # save graph 
         if use_graphbolt:
-            def _partition_to_graphbolt(part_config,
-                                        part_meta,
-                                        parts,
-                                        *,
-                                        store_eids=True,
-                                        store_inner_node=False,
-                                        store_inner_edge=False,
-                                        graph_formats=None,
-                                        n_jobs=1,):
-                rel_path_result = gb_convert_single_dgl_partition(part_id,
-                                                parts,
-                                                part_metadata,
-                                                part_config=part_config,
-                                                store_eids=store_eids,
-                                                store_inner_edge=store_inner_edge,
-                                                store_inner_node=store_inner_node,
-                                                graph_formats=graph_formats)
-                part_meta[f"part-{part_id}"]["part_graph_graphbolt"] = rel_path_result
-                
+
+            def _partition_to_graphbolt(
+                part_config,
+                part_meta,
+                parts,
+                part_i,
+                *,
+                store_eids=True,
+                store_inner_node=False,
+                store_inner_edge=False,
+                graph_formats=None,
+            ):
+                rel_path_result = gb_convert_single_dgl_partition(
+                    part_i,
+                    parts,
+                    part_metadata,
+                    part_config=part_config,
+                    store_eids=store_eids,
+                    store_inner_edge=store_inner_edge,
+                    store_inner_node=store_inner_node,
+                    graph_formats=graph_formats,
+                )
+                part_meta[f"part-{part_i}"][
+                    "part_graph_graphbolt"
+                ] = rel_path_result
+
             part = _process_partitions([part], graph_formats, sort_etypes)[0]
             # save FusedCSCSamplingGraph
             kwargs["graph_formats"] = graph_formats
-            _partition_to_graphbolt(part_config, part_metadata,parts,**kwargs)
+            kwargs.pop("n_jobs", None)
+            _partition_to_graphbolt(part_config, part_metadata, parts, **kwargs)
         else:
             part_graph_file = os.path.join(part_dir, "graph.dgl")
             part_metadata["part-{}".format(part_id)][
