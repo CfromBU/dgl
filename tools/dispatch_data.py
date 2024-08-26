@@ -173,6 +173,21 @@ def main():
         "what format is available. If multiple formats are available, selection priority "
         "from high to low is ``coo``, ``csc``, ``csr``.",
     )
+    parser.add_argument(
+        "--store_eids",
+        action="store_true",
+        help="Use GraphBolt and store eids",
+    )
+    parser.add_argument(
+        "--store_inner_node",
+        action="store_true",
+        help="Use GraphBolt and store inner node",
+    )
+    parser.add_argument(
+        "--store_outer_edge",
+        action="store_true",
+        help="Use GraphBolt and store outer edge",
+    )
 
     args, _ = parser.parse_known_args()
 
