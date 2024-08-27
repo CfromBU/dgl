@@ -118,7 +118,7 @@ def _save_dgl_graphs(filename, g_list, formats=None, sort_etypes=False):
 
 def _get_inner_node_mask(graph, ntype_id, use_graphbolt=False):
     ndata = graph.node_attributes if use_graphbolt else graph.ndata
-    assert "inner_node" in ndata, '"inner_node" is not nodes\' data'
+    assert "inner_node" in ndata, '"inner_node" is not in nodes\' data'
     if NTYPE in ndata:
         dtype = F.dtype(ndata["inner_node"])
         return (
