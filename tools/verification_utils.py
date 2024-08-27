@@ -88,6 +88,9 @@ def verify_graph_feats(
     orig_nids,
     orig_eids,
     use_graphbolt=False,
+    store_inner_node=False,
+    store_eids=False,
+    store_inner_edge=False,
 ):
     """Verify the node/edge features of the partitioned graph with
     the original graph
@@ -111,14 +114,16 @@ def verify_graph_feats(
     use_graphbolt : bool
         whether use graphbolt or not
     """
-    if use_graphbolt == True:
+    if store_inner_node or not use_graphbolt:
         for ntype in g.ntypes:
             ntype_id = g.get_ntype_id(ntype)
             inner_node_mask = _get_inner_node_mask(
                 part, ntype_id, use_graphbolt
             )
-            inner_nids = F.boolean_mask(
-                part.node_attributes[dgl.NID], inner_node_mask
+            inner_nids = (
+                F.boolean_mask(part.node_attributes[dgl.NID], inner_node_mask)
+                if use_graphbolt
+                else part.ndata[dgl.NID][inner_node_mask]
             )
             ntype_ids, inner_type_nids = gpb.map_to_per_ntype(inner_nids)
             partid = gpb.nid2partid(inner_type_nids, ntype)
@@ -134,7 +139,7 @@ def verify_graph_feats(
                 true_feats = F.gather_row(g.nodes[ntype].data[name], orig_id)
                 ndata = F.gather_row(node_feats[ntype + "/" + name], local_nids)
                 assert np.all(F.asnumpy(ndata == true_feats))
-
+    if (store_eids and store_inner_edge) or not use_graphbolt:
         for etype in g.canonical_etypes:
             etype_id = g.get_etype_id(etype)
             inner_edge_mask = _get_inner_edge_mask(
@@ -160,46 +165,6 @@ def verify_graph_feats(
                     local_eids,
                 )
                 assert np.all(F.asnumpy(edata == true_feats))
-    else:
-        for ntype in g.ntypes:
-            ntype_id = g.get_ntype_id(ntype)
-            inner_node_mask = _get_inner_node_mask(part, ntype_id)
-            inner_nids = part.ndata[dgl.NID][inner_node_mask]
-            ntype_ids, inner_type_nids = gpb.map_to_per_ntype(inner_nids)
-            partid = gpb.nid2partid(inner_type_nids, ntype)
-            assert np.all(ntype_ids.numpy() == ntype_id)
-            assert np.all(partid.numpy() == gpb.partid)
-
-            orig_id = orig_nids[ntype][inner_type_nids]
-            local_nids = gpb.nid2localnid(inner_type_nids, gpb.partid, ntype)
-
-            for name in g.nodes[ntype].data:
-                if name in [dgl.NID, "inner_node"]:
-                    continue
-                true_feats = g.nodes[ntype].data[name][orig_id]
-                ndata = node_feats[ntype + "/" + name][local_nids]
-                assert np.array_equal(ndata.numpy(), true_feats.numpy())
-
-        for etype in g.canonical_etypes:
-            etype_id = g.get_etype_id(etype)
-            inner_edge_mask = _get_inner_edge_mask(part, etype_id)
-            inner_eids = part.edata[dgl.EID][inner_edge_mask]
-            etype_ids, inner_type_eids = gpb.map_to_per_etype(inner_eids)
-            partid = gpb.eid2partid(inner_type_eids, etype)
-            assert np.all(etype_ids.numpy() == etype_id)
-            assert np.all(partid.numpy() == gpb.partid)
-
-            orig_id = orig_eids[_etype_tuple_to_str(etype)][inner_type_eids]
-            local_eids = gpb.eid2localeid(inner_type_eids, gpb.partid, etype)
-
-            for name in g.edges[etype].data:
-                if name in [dgl.EID, "inner_edge"]:
-                    continue
-                true_feats = g.edges[etype].data[name][orig_id]
-                edata = edge_feats[_etype_tuple_to_str(etype) + "/" + name][
-                    local_eids
-                ]
-                assert np.array_equal(edata.numpy(), true_feats.numpy())
 
 
 def verify_metadata_counts(part_schema, part_g, graph_schema, g, partid):

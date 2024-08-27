@@ -42,7 +42,6 @@ def _test_pipeline_graphbolt(
     store_eids=True,
     store_inner_edge=True,
     store_inner_node=True,
-    debug_mode=False,
 ):
     if num_parts % world_size != 0:
         # num_parts should be a multiple of world_size
@@ -63,7 +62,7 @@ def _test_pipeline_graphbolt(
         in_dir = os.path.join(root_dir, "chunked-data")
         output_dir = os.path.join(root_dir, "parted_data")
         os.system(
-            "python3 tools/partition_algo/random_partition.py "
+            "/opt/conda/envs/pytorch/bin/python tools/partition_algo/random_partition.py "
             "--in_dir {} --out_dir {} --num_partitions {}".format(
                 in_dir, output_dir, num_parts
             )
@@ -82,7 +81,7 @@ def _test_pipeline_graphbolt(
             for i in range(world_size):
                 f.write(f"127.0.0.{i + 1}\n")
 
-        cmd = "python3 tools/dispatch_data.py"
+        cmd = "/opt/conda/envs/pytorch/bin/python tools/dispatch_data.py"
         cmd += f" --in-dir {in_dir}"
         cmd += f" --partitions-dir {partition_dir}"
         cmd += f" --out-dir {out_dir}"
@@ -103,7 +102,9 @@ def _test_pipeline_graphbolt(
 
         # check if verify_partitions.py is used for validation.
         if use_verify_partitions:
-            cmd = "python3 tools/verify_partitions.py "
+            cmd = (
+                "/opt/conda/envs/pytorch/bin/python tools/verify_partitions.py "
+            )
             cmd += f" --orig-dataset-dir {in_dir}"
             cmd += f" --part-graph {out_dir}"
             cmd += f" --partitions-dir {output_dir}"
@@ -149,10 +150,33 @@ def _test_pipeline_graphbolt(
     "num_chunks, num_parts, world_size",
     [[4, 4, 4], [8, 4, 2], [8, 4, 4], [9, 6, 3], [11, 11, 1], [11, 4, 1]],
 )
-def test_pipeline_basics(num_chunks, num_parts, world_size):
-    _test_pipeline_graphbolt(num_chunks, num_parts, world_size)
+@pytest.mark.parametrize("store_eids", [True, False])
+@pytest.mark.parametrize("store_inner_edge", [True, False])
+@pytest.mark.parametrize("store_inner_node", [True, False])
+def test_pipeline_basics(
+    num_chunks,
+    num_parts,
+    world_size,
+    store_eids,
+    store_inner_edge,
+    store_inner_node,
+):
     _test_pipeline_graphbolt(
-        num_chunks, num_parts, world_size, use_verify_partitions=False
+        num_chunks,
+        num_parts,
+        world_size,
+        store_inner_node=store_inner_node,
+        store_inner_edge=store_inner_edge,
+        store_eids=store_eids,
+    )
+    _test_pipeline_graphbolt(
+        num_chunks,
+        num_parts,
+        world_size,
+        use_verify_partitions=False,
+        store_inner_node=store_inner_node,
+        store_inner_edge=store_inner_edge,
+        store_eids=store_eids,
     )
 
 
@@ -202,5 +226,5 @@ def test_pipeline_feature_format(data_fmt):
     _test_pipeline_graphbolt(4, 4, 4, data_fmt=data_fmt)
 
 
-if __name__ == '__main__':
-    test_pipeline_basics(4,4,4)
+if __name__ == "__main__":
+    test_pipeline_arbitrary_chunks(1, 4, 2, 1, 1)

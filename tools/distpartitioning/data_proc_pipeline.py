@@ -105,6 +105,21 @@ if __name__ == "__main__":
         type=str,
         help="Save partitions in specified formats.",
     )
+    parser.add_argument(
+        "--store_eids",
+        action="store_true",
+        help="Use GraphBolt and store eids",
+    )
+    parser.add_argument(
+        "--store_inner_node",
+        action="store_true",
+        help="Use GraphBolt and store inner node",
+    )
+    parser.add_argument(
+        "--store_inner_edge",
+        action="store_true",
+        help="Use GraphBolt and store outer edge",
+    )
     params = parser.parse_args()
 
     # invoke the pipeline function

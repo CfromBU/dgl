@@ -1337,6 +1337,9 @@ def gen_dist_partitions(rank, world_size, params):
             params.save_orig_nids,
             params.save_orig_eids,
             params.use_graphbolt,
+            store_eids=params.store_eids,
+            store_inner_node=params.store_inner_node,
+            store_inner_edge=params.store_inner_edge,
         )
         sort_etypes = len(etypes_map) > 1
         local_node_features = prepare_local_data(

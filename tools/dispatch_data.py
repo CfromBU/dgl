@@ -76,6 +76,9 @@ def submit_jobs(args) -> str:
     argslist += "--save-orig-nids " if args.save_orig_nids else ""
     argslist += "--save-orig-eids " if args.save_orig_eids else ""
     argslist += "--use-graphbolt" if args.use_graphbolt else ""
+    argslist += "--store-eids" if args.store_eids else ""
+    argslist += "--store-inner-node" if args.store_inner_node else ""
+    argslist += "--store-inner-edge" if args.store_inner_edge else ""
     argslist += (
         f"--graph-formats {args.graph_formats} " if args.graph_formats else ""
     )
@@ -184,7 +187,7 @@ def main():
         help="Use GraphBolt and store inner node",
     )
     parser.add_argument(
-        "--store_outer_edge",
+        "--store_inner_edge",
         action="store_true",
         help="Use GraphBolt and store outer edge",
     )
