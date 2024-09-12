@@ -1506,6 +1506,7 @@ def test_partition_graph_graphbolt_homo(
     store_inner_node,
     store_inner_edge,
     debug_mode,
+    n_jobs=1,
 ):
     reset_envs()
     if debug_mode:
@@ -1532,6 +1533,7 @@ def test_partition_graph_graphbolt_homo(
             store_inner_node=store_inner_node,
             store_inner_edge=store_inner_edge,
             return_mapping=True,
+            n_jobs=n_jobs,
         )
 
         if debug_mode:
@@ -2122,6 +2124,31 @@ def test_partition_graph_graphbolt_hetero_find_edges(
                 dgl.distributed.DGL2GB_EID
             ][DGL_inner_local_eids]
             assert th.equal(inner_local_eids, GB_inner_local_eids)
+
+
+@pytest.mark.parametrize("n_jobs", [2, 4])
+def test_partition_graph_graphbolt_hetero_multi_jobs(
+    n_jobs,
+):
+    reset_envs()
+    test_partition_graph_graphbolt_hetero(
+        part_method="metis",
+        num_parts=4,
+        n_jobs=n_jobs,
+        store_eids=True,
+        store_inner_node=True,
+        store_inner_edge=True,
+        debug_mode=False,
+    )
+    test_partition_graph_graphbolt_homo(
+        part_method="metis",
+        num_parts=4,
+        n_jobs=n_jobs,
+        store_eids=True,
+        store_inner_node=True,
+        store_inner_edge=True,
+        debug_mode=False,
+    )
 
 
 @pytest.mark.parametrize("num_parts", [1, 4])
