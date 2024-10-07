@@ -42,6 +42,11 @@ from utils import (
     write_metadata_json,
 )
 
+GREEN = '\033[32m'
+BLUE = '\033[34m'
+YELLOW = '\033[33m'
+RED = '\033[31m'
+RESET = '\033[0m'
 
 def gen_node_data(
     rank, world_size, num_parts, id_lookup, ntid_ntype_map, schema_map
@@ -488,11 +493,11 @@ def exchange_feature(
         feat_dims_dtype = list(np.zeros((rank0_shape_len), dtype=np.int64))
         feat_dims_dtype.append(DATA_TYPE_ID[torch.float32])
         feature_dimension = 0
-
     logging.debug(f"Sending the feature shape information - {feat_dims_dtype}")
     all_dims_dtype = allgather_sizes(
         feat_dims_dtype, world_size, num_parts, return_sizes=True
     )
+    logging.info(f"{YELLOW}[Rank: {rank}] all_dims_dtype:{all_dims_dtype}, feat_dim_dtype:{feat_dims_dtype}{RESET}")
 
     for idx in range(world_size):
         cond = partid_slice == (idx + local_part_id * world_size)
@@ -553,7 +558,19 @@ def exchange_feature(
         else:
             cur_features[local_feat_key] = output_feat_list
             cur_global_ids[local_feat_key] = output_id_list
-
+            if len(output_id_list)==0 or output_id_list is None:
+                logging.info(f"[Rank {rank}]key:{cur_global_ids[local_feat_key]}")
+    else:
+        cur_features[local_feat_key] = torch.empty((0, feature_dimension), dtype=torch.float32)
+        cur_global_ids[local_feat_key] = torch.empty((0, ), dtype=torch.int64)
+        logging.info(f"{BLUE}[Rank: {rank}]len(output_id_list) is 0, local_feat_key is{local_feat_key},{cur_features[local_feat_key]}hahhahahhahahahhahahhahhaahahahahah, featrure_dimension:{feature_dimension}{RESET}")
+    logging.info(f"[Rank: {rank}] Feature exchange completed for {feat_key}, local_feat_key:{local_feat_key}, cur_global_ids:{list(cur_global_ids.keys())}")
+    if len(cur_global_ids.keys())==0:
+        logging.info(f"[Rank: {rank}] cur_global_ids is empty, {global_id_per_rank}")
+        logging.info(
+                    f"[Rank: {rank}]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! output_id_list is empty, {output_id_list}， cur_global_ids:{cur_global_ids}，local_feat_key:{local_feat_key}"
+                )
+        logging.info(f"[Rank: {rank}]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! output_feat_list is empty, {output_feat_list}, cur_features:{cur_features}")
     return cur_features, cur_global_ids
 
 
@@ -1347,6 +1364,7 @@ def gen_dist_partitions(rank, world_size, params):
             store_inner_edge=params.store_inner_edge,
             store_eids=params.store_eids,
         )
+        logging.info(f"{RED}[Rank {rank}] etypes_map_val{etypes_map_val}{RESET}")
         sort_etypes = len(etypes_map) > 1
         local_node_features = prepare_local_data(
             rcvd_node_features, local_part_id

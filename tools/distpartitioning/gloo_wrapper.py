@@ -189,6 +189,9 @@ def alltoallv_cpu(rank, world_size, input_tensor_list, retain_nones=True):
 
     # extract un-padded message from the output_tensor_list and return it
     return_vals = []
+    import logging
+    if output_tensor_list[0].numel() == 0:
+        logging.info(f"rank: {rank}, output_tensor_list: {output_tensor_list},  recv_counts: {recv_counts}")
     for s, t in zip(recv_counts, output_tensor_list):
         if s[0] == 0:
             if retain_nones:

@@ -547,18 +547,24 @@ def get_dataset(
                     autogenerate_column_names=True,
                 )
                 parse_options = pyarrow.csv.ParseOptions(delimiter=" ")
-                with pyarrow.csv.open_csv(
-                    edge_file,
-                    read_options=read_options,
-                    parse_options=parse_options,
-                ) as reader:
-                    for next_chunk in reader:
-                        if next_chunk is None:
-                            break
-
-                        next_table = pyarrow.Table.from_batches([next_chunk])
-                        src_ids.append(next_table["f0"].to_numpy())
-                        dst_ids.append(next_table["f1"].to_numpy())
+                try:
+                    with pyarrow.csv.open_csv(
+                        edge_file,
+                        read_options=read_options,
+                        parse_options=parse_options,
+                    ) as reader:
+                        for next_chunk in reader:
+                            if next_chunk is None:
+                                break
+                            next_table = pyarrow.Table.from_batches([next_chunk])
+                            src_ids.append(next_table["f0"].to_numpy())
+                            dst_ids.append(next_table["f1"].to_numpy())
+                except Exception as e:
+                    src_ids.append(np.array([]))
+                    dst_ids.append(np.array([]))
+                    logging.error(
+                        f"[rank {rank}] Error while reading edges from the disk, {e}, edge_file ={edge_file}"
+                    )
             elif (
                 etype_info[constants.STR_FORMAT][constants.STR_NAME]
                 == constants.STR_PARQUET

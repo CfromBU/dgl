@@ -2236,3 +2236,6 @@ def test_partition_hetero_few_nodes(
         expected_exception = True
     assert expected_exception == (part_method == "metis")
     reset_envs()
+
+if __name__=="__main__":
+    test_partition_hetero_few_edges('metis',4,1,None)

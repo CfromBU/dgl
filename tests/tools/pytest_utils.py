@@ -271,6 +271,7 @@ def _chunk_graph(
             metadata["edge_data"][etypestr] = edata_meta
 
     metadata_path = "metadata.json"
+    print(metadata)
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, sort_keys=True, indent=4)
     logging.info("Saved metadata in %s" % os.path.abspath(metadata_path))

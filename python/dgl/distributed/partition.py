@@ -1856,11 +1856,11 @@ def gb_convert_single_dgl_partition(
     str
         The path csc_graph to save.
     """
+    part_meta = _load_part_config(part_config)
     gpb, _, ntypes, etypes = load_partition_book(
         part_config=part_config, part_id=part_id
     )
     part = _load_part(part_config, part_id)
-    part_meta = copy.deepcopy(_load_part_config(part_config))
     csc_graph = _convert_dgl_partition_to_gb(
         graph=part,
         ntypes=ntypes,
